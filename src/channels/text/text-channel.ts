@@ -10,11 +10,17 @@ import { Channel } from '../channel.js';
 export class TextChannel extends Channel {
     readonly name = 'text';
     private rl: readline.Interface | null = null;
+    private closed = false;
 
     async start(): Promise<void> {
         this.rl = readline.createInterface({
             input: process.stdin,
             output: process.stdout,
+        });
+
+        // stdin 关闭时优雅退出（piped input 场景）
+        this.rl.on('close', () => {
+            this.closed = true;
         });
 
         console.log('\n🚗 CarClaw CLI 模式已启动');
@@ -24,7 +30,9 @@ export class TextChannel extends Channel {
     }
 
     private prompt(): void {
-        this.rl?.question('你: ', async (input) => {
+        if (this.closed || !this.rl) return;
+
+        this.rl.question('你: ', async (input) => {
             const text = input.trim();
 
             if (text === 'exit' || text === 'quit') {
@@ -53,6 +61,7 @@ export class TextChannel extends Channel {
     }
 
     async stop(): Promise<void> {
+        this.closed = true;
         this.rl?.close();
         this.rl = null;
     }

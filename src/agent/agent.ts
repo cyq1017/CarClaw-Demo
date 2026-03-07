@@ -101,17 +101,24 @@ export class Agent {
 
             // 如果有工具调用
             if (llmResponse.toolCalls && llmResponse.toolCalls.length > 0) {
+                // 写入 assistant 消息（携带 tool_calls，OpenAI 格式要求）
+                session.addMessage({
+                    role: 'assistant',
+                    content: llmResponse.content || '',
+                    tool_calls: llmResponse.toolCalls.map((tc) => ({
+                        id: tc.id,
+                        type: 'function' as const,
+                        function: { name: tc.name, arguments: JSON.stringify(tc.args) },
+                    })),
+                });
+
+                // 执行每个工具并写入 tool 结果消息
                 for (const toolCall of llmResponse.toolCalls) {
                     console.log(`🔧 Tool call: ${toolCall.name}(${JSON.stringify(toolCall.args)})`);
 
-                    // 执行工具（ToolExecutor 内部会调用 SafetyGuard + DriveMode 检查）
                     const result = await this.toolExecutor.execute(toolCall.name, toolCall.args);
                     toolCallResults.push({ name: toolCall.name, args: toolCall.args, result });
 
-                    session.addMessage({
-                        role: 'assistant',
-                        content: `[调用工具 ${toolCall.name}]`,
-                    });
                     session.addMessage({
                         role: 'tool',
                         content: JSON.stringify(result),

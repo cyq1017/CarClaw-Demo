@@ -13,6 +13,12 @@ export interface Message {
     content: string;
     toolCallId?: string;
     name?: string;
+    /** OpenAI 格式: assistant 消息携带 tool_calls */
+    tool_calls?: Array<{
+        id: string;
+        type: 'function';
+        function: { name: string; arguments: string };
+    }>;
 }
 
 export interface VehicleSnapshot {

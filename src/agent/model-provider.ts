@@ -55,6 +55,7 @@ export class OpenAICompatibleProvider implements ModelProvider {
                 content: m.content,
                 ...(m.toolCallId ? { tool_call_id: m.toolCallId } : {}),
                 ...(m.name ? { name: m.name } : {}),
+                ...(m.tool_calls ? { tool_calls: m.tool_calls } : {}),
             })),
             temperature: this.temperature,
         };
