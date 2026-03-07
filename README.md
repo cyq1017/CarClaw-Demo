@@ -139,10 +139,14 @@ mock/
 
 | 阶段 | 内容 | 状态 |
 |------|------|------|
-| W1 | 骨架搭建 + Agent + SafetyGuard | ✅ |
-| W2 | 车机工具 + Skill 系统 | 🔄 |
-| W3 | 语音通道 + 多轮对话 | ⏳ |
-| W4 | 集成打磨 + v0.1 发布 | ⏳ |
+| W1 | 骨架搭建 + Agent + SafetyGuard + DriveModeController | ✅ |
+| W2 | GPT-4o 端到端跑通 + API Key 安全防护 | ✅ |
+| W3 | macOS TTS 语音 + 多轮车辆状态感知 | ✅ |
+| W4 | 集成打磨 + 评测基准 + v0.1 发布 | 🔄 |
+| v0.2 | 自动化评测（Mobiwusi 5000 QA + MagicHub 导航） | ⏳ |
+| v0.3 | 车内 ASR 评测 (AISHELL-5) + 离线小模型 | ⏳ |
+
+> 📊 评测方案详见 [docs/evaluation-plan.md](docs/evaluation-plan.md)
 
 ## 🙏 致谢
 
