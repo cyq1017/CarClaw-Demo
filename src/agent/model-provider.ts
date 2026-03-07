@@ -131,15 +131,25 @@ export class FallbackModelProvider implements ModelProvider {
  */
 export class MockModelProvider implements ModelProvider {
     async chat(messages: Message[], _tools?: any[]): Promise<LLMResponse> {
+        // 找到最后一条用户消息和最后一条消息
         const lastMessage = messages[messages.length - 1];
-        const userText = lastMessage?.content || '';
 
-        // 简单的模式匹配回复
+        // 如果最后一条消息是 tool 结果，返回文本总结（避免无限循环）
+        if (lastMessage?.role === 'tool') {
+            const result = JSON.parse(lastMessage.content || '{}');
+            return {
+                content: result.output || '操作已完成。',
+            };
+        }
+
+        // 只对用户消息做意图匹配
+        const userText = lastMessage?.role === 'user' ? lastMessage.content : '';
+
         if (userText.includes('空调') || userText.includes('温度')) {
             return {
                 content: null,
                 toolCalls: [{
-                    id: 'mock_call_1',
+                    id: `mock_${Date.now()}`,
                     name: 'vehicle_control',
                     args: { target: 'ac', action: 'on', value: 22 },
                 }],
@@ -150,15 +160,26 @@ export class MockModelProvider implements ModelProvider {
             return {
                 content: null,
                 toolCalls: [{
-                    id: 'mock_call_2',
+                    id: `mock_${Date.now()}`,
                     name: 'navigation',
                     args: { destination: userText, action: 'navigate' },
                 }],
             };
         }
 
+        if (userText.includes('播放') || userText.includes('音乐') || userText.includes('歌')) {
+            return {
+                content: null,
+                toolCalls: [{
+                    id: `mock_${Date.now()}`,
+                    name: 'media_control',
+                    args: { action: 'play', query: userText },
+                }],
+            };
+        }
+
         return {
-            content: `好的，我是 CarClaw 车载助手。你说了："${userText}"`,
+            content: `好的，我是 CarClaw 🚗 有什么可以帮你的？（提示：试试"打开空调"、"导航到xxx"、"播放音乐"）`,
         };
     }
 }
