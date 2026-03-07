@@ -1,8 +1,8 @@
 /**
  * CarClaw Agent — 推理与执行核心
  *
- * 复用 OpenClaw Agent Loop 模式：
- * Prompt 组装 → LLM 推理 → 工具调用 → 循环 → 回复
+ * 复用 OpenClaw Agent Loop 模式 + CarClaw 安全层：
+ * Prompt 组装 → LLM 推理 → SafetyGuard 校验 → 工具调用 → 循环 → 回复
  */
 
 import type { Session, Message } from '../core/session.js';
@@ -10,6 +10,8 @@ import type { Tool, ToolResult } from '../tools/tool.js';
 import { ToolExecutor } from '../tools/tool-executor.js';
 import { PromptBuilder } from './prompt-builder.js';
 import type { ModelProvider } from './model-provider.js';
+import type { SafetyGuard } from '../safety/safety-guard.js';
+import type { DriveModeController } from '../safety/drive-mode.js';
 
 export interface AgentConfig {
     name: string;
@@ -17,6 +19,10 @@ export interface AgentConfig {
     systemPromptPath?: string;
     maxToolCalls: number;
     temperature: number;
+    /** CarClaw 独有：驾驶安全拦截器 */
+    safetyGuard?: SafetyGuard;
+    /** CarClaw 独有：驾驶模式控制器 */
+    driveModeController?: DriveModeController;
 }
 
 export interface AgentResponse {
@@ -32,7 +38,10 @@ export class Agent {
 
     constructor(config: AgentConfig) {
         this.config = config;
-        this.toolExecutor = new ToolExecutor();
+        this.toolExecutor = new ToolExecutor({
+            safetyGuard: config.safetyGuard,
+            driveModeController: config.driveModeController,
+        });
         this.promptBuilder = new PromptBuilder();
     }
 
@@ -57,44 +66,48 @@ export class Agent {
     /**
      * 执行 Agent Loop
      *
-     * 1. 组装 Prompt（System + History + Skills + Vehicle Context）
-     * 2. 调用 LLM 推理
-     * 3. 如果有工具调用 → 执行 → 结果写回 → 再推理
-     * 4. 循环直到 LLM 返回纯文本回复
-     * 5. 返回最终回复
+     * 1. 更新 DriveMode（根据车辆状态自动判断）
+     * 2. 组装 Prompt（System + DriveMode + Vehicle Context + History）
+     * 3. 调用 LLM 推理
+     * 4. 如果有工具调用 → SafetyGuard 校验 → 执行 → 结果写回 → 再推理
+     * 5. 循环直到 LLM 返回纯文本回复
      */
     async run(session: Session, _input: string): Promise<AgentResponse> {
         const toolCallResults: AgentResponse['toolCalls'] = [];
         let iterations = 0;
 
-        // 1. 组装系统提示
+        // 更新驾驶模式
+        if (this.config.driveModeController) {
+            await this.config.driveModeController.updateMode();
+        }
+
+        // 组装系统提示（含 DriveMode 注入）
         const systemPrompt = this.promptBuilder.build({
             vehicleContext: session.vehicleContext,
-            skills: [], // TODO: 从 SkillLoader 加载
+            skills: [],
+            driveModePrompt: this.config.driveModeController?.getModePrompt(),
         });
 
         while (iterations < this.config.maxToolCalls) {
             iterations++;
 
-            // 2. 组装消息
             const messages = [
                 { role: 'system' as const, content: systemPrompt },
                 ...session.getHistory(),
             ];
 
-            // 3. 调用 LLM
+            // 调用 LLM
             const llmResponse = await this.config.modelProvider.chat(messages, this.getToolDefinitions());
 
-            // 4. 如果有工具调用
+            // 如果有工具调用
             if (llmResponse.toolCalls && llmResponse.toolCalls.length > 0) {
                 for (const toolCall of llmResponse.toolCalls) {
                     console.log(`🔧 Tool call: ${toolCall.name}(${JSON.stringify(toolCall.args)})`);
 
-                    // 执行工具
+                    // 执行工具（ToolExecutor 内部会调用 SafetyGuard + DriveMode 检查）
                     const result = await this.toolExecutor.execute(toolCall.name, toolCall.args);
                     toolCallResults.push({ name: toolCall.name, args: toolCall.args, result });
 
-                    // 工具结果写回会话
                     session.addMessage({
                         role: 'assistant',
                         content: `[调用工具 ${toolCall.name}]`,
@@ -106,29 +119,21 @@ export class Agent {
                         name: toolCall.name,
                     });
 
-                    console.log(`✅ Tool result: ${result.success ? '成功' : '失败'} — ${result.output}`);
+                    console.log(`${result.success ? '✅' : '🛡️'} ${result.output}`);
                 }
-                // 继续循环，让 LLM 看到工具结果后再决定
                 continue;
             }
 
-            // 5. 纯文本回复 → 结束循环
+            // 纯文本回复 → 结束
             return {
                 text: llmResponse.content || '抱歉，我没有理解你的意思。',
                 toolCalls: toolCallResults,
             };
         }
 
-        // 超过最大工具调用次数
-        return {
-            text: '操作已完成。',
-            toolCalls: toolCallResults,
-        };
+        return { text: '操作已完成。', toolCalls: toolCallResults };
     }
 
-    /**
-     * 获取所有注册工具的定义（给 LLM 用）
-     */
     private getToolDefinitions(): any[] {
         return [...this.tools.values()].map((tool) => ({
             type: 'function',

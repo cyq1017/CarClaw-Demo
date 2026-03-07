@@ -66,12 +66,14 @@ async function main() {
 
     console.log('');
 
-    // 6. 创建 Agent
+    // 6. 创建 Agent（注入 SafetyGuard + DriveModeController）
     const agent = new Agent({
         name: config.agent.name,
         modelProvider,
         maxToolCalls: config.agent.maxToolCalls,
         temperature: config.agent.temperature,
+        safetyGuard,
+        driveModeController,
     });
 
     // 7. 注册车机工具

@@ -14,6 +14,8 @@ export interface PromptContext {
     vehicleContext?: VehicleSnapshot | null;
     skills?: string[];
     userPreferences?: string;
+    /** DriveModeController 注入的模式提示 */
+    driveModePrompt?: string;
 }
 
 const BASE_SYSTEM_PROMPT = `你是 CarClaw，一个智能车载 AI 助手。
@@ -41,6 +43,11 @@ export class PromptBuilder {
         // 注入车辆状态
         if (context.vehicleContext) {
             parts.push(this.buildVehicleContext(context.vehicleContext));
+        }
+
+        // 注入驾驶模式（CarClaw 独有）
+        if (context.driveModePrompt) {
+            parts.push(context.driveModePrompt);
         }
 
         // 注入 Skill 描述
