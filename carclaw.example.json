@@ -25,6 +25,6 @@
         "engine": "mock"
     },
     "tts": {
-        "engine": "console"
+        "engine": "macos"
     }
 }

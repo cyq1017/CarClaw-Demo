@@ -3,10 +3,10 @@
  *
  * 启动流程：
  * 1. 加载 carclaw.json 配置
- * 2. 初始化 Model Provider（primary + fallback）
+ * 2. 初始化 Model Provider + TTS
  * 3. 创建 Vehicle Simulator + SafetyGuard + DriveModeController
  * 4. 创建 Agent + 注册工具
- * 5. 启动 Gateway
+ * 5. 启动 Gateway（自动注入车辆状态到每轮对话）
  */
 
 import { loadConfig, printModelConfig } from './config/config-loader.js';
@@ -14,6 +14,7 @@ import { createProviderFromConfig, MockModelProvider } from './agent/model-provi
 import { Agent } from './agent/agent.js';
 import { Gateway } from './core/gateway.js';
 import { TextChannel } from './channels/text/text-channel.js';
+import { createTTSEngine } from './channels/voice/tts.js';
 import { VehicleSimulator } from '../mock/vehicle-simulator.js';
 import { SafetyGuard } from './safety/safety-guard.js';
 import { DriveModeController } from './safety/drive-mode.js';
@@ -46,16 +47,20 @@ async function main() {
         console.log('   编辑 carclaw.json 或设置 LLM_API_KEY 环境变量\n');
     }
 
-    // 3. 创建 Vehicle Simulator
+    // 3. 创建 TTS 引擎
+    const tts = createTTSEngine(config.tts.engine);
+    console.log(`🔊 TTS 引擎: ${config.tts.engine}`);
+
+    // 4. 创建 Vehicle Simulator
     const vehicleSimulator = new VehicleSimulator();
-    console.log('🚗 车辆模拟器已就绪');
+    console.log('\n🚗 车辆模拟器已就绪');
     console.log(vehicleSimulator.getStatusDescription());
 
-    // 4. 初始化 SafetyGuard（CarClaw 独有）
+    // 5. 初始化 SafetyGuard
     const safetyGuard = new SafetyGuard(vehicleSimulator);
     console.log('🛡️ SafetyGuard 已启动（4 条安全规则）');
 
-    // 5. 初始化 DriveModeController（CarClaw 独有）
+    // 6. 初始化 DriveModeController
     const driveModeController = new DriveModeController(vehicleSimulator);
     await driveModeController.updateMode();
     console.log(`🚦 DriveMode: ${driveModeController.getMode().toUpperCase()}`);
@@ -66,7 +71,7 @@ async function main() {
 
     console.log('');
 
-    // 6. 创建 Agent（注入 SafetyGuard + DriveModeController）
+    // 7. 创建 Agent
     const agent = new Agent({
         name: config.agent.name,
         modelProvider,
@@ -76,7 +81,7 @@ async function main() {
         driveModeController,
     });
 
-    // 7. 注册车机工具
+    // 8. 注册车机工具
     agent.registerTools([
         createVehicleControlTool(vehicleSimulator),
         createNavigationTool(),
@@ -84,11 +89,14 @@ async function main() {
         createScheduleTool(),
     ]);
 
-    // 8. 创建 Text Channel + Gateway
-    const textChannel = new TextChannel();
+    // 9. 创建 Text Channel（带 TTS）
+    const textChannel = new TextChannel(tts);
+
+    // 10. 创建 Gateway（注入车辆状态到多轮对话）
     const gateway = new Gateway({
         agent,
         channels: [textChannel],
+        vehicleApi: vehicleSimulator,
     });
 
     process.on('SIGINT', async () => {
