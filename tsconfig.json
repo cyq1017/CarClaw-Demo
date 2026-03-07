@@ -1,0 +1,47 @@
+{
+    "compilerOptions": {
+        "target": "ES2022",
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "outDir": "dist",
+        "rootDir": ".",
+        "strict": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true,
+        "resolveJsonModule": true,
+        "declaration": true,
+        "declarationMap": true,
+        "sourceMap": true,
+        "allowImportingTsExtensions": false,
+        "noEmit": false,
+        "paths": {
+            "@core/*": [
+                "./src/core/*"
+            ],
+            "@agent/*": [
+                "./src/agent/*"
+            ],
+            "@channels/*": [
+                "./src/channels/*"
+            ],
+            "@tools/*": [
+                "./src/tools/*"
+            ],
+            "@skills/*": [
+                "./src/skills/*"
+            ],
+            "@config/*": [
+                "./src/config/*"
+            ]
+        }
+    },
+    "include": [
+        "src/**/*",
+        "mock/**/*"
+    ],
+    "exclude": [
+        "node_modules",
+        "dist"
+    ]
+}

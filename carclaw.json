@@ -1,0 +1,30 @@
+{
+    "model": {
+        "primary": {
+            "name": "deepseek",
+            "baseUrl": "https://api.deepseek.com",
+            "apiKey": "sk-xxx",
+            "model": "deepseek-chat",
+            "api": "openai-completions"
+        },
+        "fallback": {
+            "name": "qwen",
+            "baseUrl": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+            "apiKey": "sk-xxx",
+            "model": "qwen-plus",
+            "api": "openai-completions"
+        }
+    },
+    "agent": {
+        "name": "CarClaw",
+        "maxToolCalls": 10,
+        "temperature": 0.7,
+        "systemPrompt": "src/config/prompts/car-system.md"
+    },
+    "stt": {
+        "engine": "mock"
+    },
+    "tts": {
+        "engine": "console"
+    }
+}
