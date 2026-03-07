@@ -1,0 +1,21 @@
+#!/bin/bash
+# CarClaw pre-commit hook — 防止 API Key 泄漏
+# 安装方法: cp hooks/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+
+STAGED=$(git diff --cached --name-only)
+
+# 检查是否有人试图提交 carclaw.json
+if echo "$STAGED" | grep -q "carclaw.json"; then
+    echo "❌ 禁止提交 carclaw.json（可能包含 API Key）"
+    echo "   请使用 carclaw.example.json 作为模板"
+    exit 1
+fi
+
+# 检查是否有硬编码的真实 API Key（忽略 sk-xxx 占位符）
+if git diff --cached | grep -E '^\+' | grep -v 'sk-xxx' | grep -qE "(sk-proj-|sk-[a-zA-Z0-9]{30,})"; then
+    echo "❌ 检测到疑似 API Key，请移除后再提交"
+    echo "   使用环境变量 LLM_API_KEY 代替硬编码"
+    exit 1
+fi
+
+echo "✅ 安全检查通过"
