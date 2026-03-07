@@ -1,17 +1,17 @@
 {
     "model": {
         "primary": {
+            "name": "openai",
+            "baseUrl": "https://api.openai.com/v1",
+            "apiKey": "sk-xxx",
+            "model": "gpt-4o",
+            "api": "openai-completions"
+        },
+        "fallback": {
             "name": "deepseek",
             "baseUrl": "https://api.deepseek.com",
             "apiKey": "sk-xxx",
             "model": "deepseek-chat",
-            "api": "openai-completions"
-        },
-        "fallback": {
-            "name": "qwen",
-            "baseUrl": "https://dashscope.aliyuncs.com/compatible-mode/v1",
-            "apiKey": "sk-xxx",
-            "model": "qwen-plus",
             "api": "openai-completions"
         }
     },
