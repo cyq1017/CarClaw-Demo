@@ -142,7 +142,7 @@ mock/
 | W1 | 骨架搭建 + Agent + SafetyGuard + DriveModeController | ✅ |
 | W2 | GPT-4o 端到端跑通 + API Key 安全防护 | ✅ |
 | W3 | macOS TTS 语音 + 多轮车辆状态感知 | ✅ |
-| W4 | 集成打磨 + 评测基准 + v0.1 发布 | 🔄 |
+| W4 | 集成打磨 + 评测基准 + v0.1 发布 | ✅ |
 | v0.2 | 自动化评测（Mobiwusi 5000 QA + MagicHub 导航） | ⏳ |
 | v0.3 | 车内 ASR 评测 (AISHELL-5) + 离线小模型 | ⏳ |
 
