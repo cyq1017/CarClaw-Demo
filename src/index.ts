@@ -1,17 +1,19 @@
 /**
- * CarClaw — 车载 AI 助手入口
+ * CarClaw — 车载 AI 助手入口（多 Agent 架构）
  *
  * 启动流程：
- * 1. 加载 carclaw.json 配置
+ * 1. 加载配置
  * 2. 初始化 Model Provider + TTS
  * 3. 创建 Vehicle Simulator + SafetyGuard + DriveModeController
- * 4. 创建 Agent + 注册工具
- * 5. 启动 Gateway（自动注入车辆状态到每轮对话）
+ * 4. 加载 Skills
+ * 5. 创建 4 个专业 Agent + AgentRouter
+ * 6. 启动 Gateway（多 Agent 路由）
  */
 
 import { loadConfig, printModelConfig } from './config/config-loader.js';
 import { createProviderFromConfig, MockModelProvider } from './agent/model-provider.js';
 import { Agent } from './agent/agent.js';
+import { AgentRouter } from './agent/agent-router.js';
 import { Gateway } from './core/gateway.js';
 import { TextChannel } from './channels/text/text-channel.js';
 import { createTTSEngine } from './channels/voice/tts.js';
@@ -27,15 +29,14 @@ import { SkillLoader } from './skills/skill-loader.js';
 async function main() {
     console.log('');
     console.log('╔══════════════════════════════════════════════╗');
-    console.log('║  🚗 CarClaw v0.1 — Built on OpenClaw         ║');
-    console.log('║  开源车载 AI 助手框架                          ║');
+    console.log('║  🚗 CarClaw v0.2 — Multi-Agent Architecture  ║');
+    console.log('║  开源车载 AI 助手框架 · Built on OpenClaw      ║');
     console.log('╚══════════════════════════════════════════════╝');
     console.log('');
 
-    // 1. 加载配置
+    // ── 1. 配置 ──
     const config = loadConfig();
 
-    // 2. 初始化 Model Provider
     const hasApiKey = !!config.model.primary.apiKey && config.model.primary.apiKey !== 'sk-xxx';
     const modelProvider = hasApiKey
         ? createProviderFromConfig(config.model)
@@ -48,63 +49,95 @@ async function main() {
         console.log('   编辑 carclaw.json 或设置 LLM_API_KEY 环境变量\n');
     }
 
-    // 3. 创建 TTS 引擎
+    // ── 2. TTS ──
     const tts = createTTSEngine(config.tts.engine);
-    console.log(`🔊 TTS 引擎: ${config.tts.engine}`);
+    console.log(`🔊 TTS: ${config.tts.engine}`);
 
-    // 4. 创建 Vehicle Simulator
+    // ── 3. 车辆模拟器 + 安全层 ──
     const vehicleSimulator = new VehicleSimulator();
     console.log('\n🚗 车辆模拟器已就绪');
     console.log(vehicleSimulator.getStatusDescription());
 
-    // 5. 初始化 SafetyGuard
     const safetyGuard = new SafetyGuard(vehicleSimulator);
-    console.log('🛡️ SafetyGuard 已启动（4 条安全规则）');
+    console.log('🛡️ SafetyGuard 已启动');
 
-    // 6. 初始化 DriveModeController
     const driveModeController = new DriveModeController(vehicleSimulator);
     await driveModeController.updateMode();
     console.log(`🚦 DriveMode: ${driveModeController.getMode().toUpperCase()}`);
 
     driveModeController.onModeChange((oldMode, newMode) => {
-        console.log(`🚦 DriveMode changed: ${oldMode} → ${newMode}`);
+        console.log(`🚦 DriveMode: ${oldMode} → ${newMode}`);
     });
 
-    // 7. 加载 Skills
+    // ── 4. Skills ──
     const skillLoader = new SkillLoader(
         new URL('./skills', import.meta.url).pathname
     );
-    const skills = await skillLoader.loadAll();
+    await skillLoader.loadAll();
     const skillDescriptions = skillLoader.getSkillDescriptions();
-    console.log(`📦 Skills loaded: ${skills.length} 个`);
 
     console.log('');
 
-    // 8. 创建 Agent（注入 Skills + Safety）
-    const agent = new Agent({
-        name: config.agent.name,
+    // ── 5. 创建专业 Agent ──
+    const sharedConfig = {
         modelProvider,
         maxToolCalls: config.agent.maxToolCalls,
         temperature: config.agent.temperature,
-        skills: skillDescriptions,
         safetyGuard,
         driveModeController,
-    });
+    };
 
-    // 9. 注册车机工具
-    agent.registerTools([
+    // 🚗 车控 Agent — 空调/车窗/座椅/灯光
+    const vehicleAgent = new Agent({
+        ...sharedConfig,
+        name: '车控助手',
+        skills: skillDescriptions.filter((s) => s.includes('车控') || s.includes('vehicle')),
+    });
+    vehicleAgent.registerTool(createVehicleControlTool(vehicleSimulator));
+
+    // 🗺️ 导航 Agent — 路线/POI/到达时间
+    const navAgent = new Agent({
+        ...sharedConfig,
+        name: '导航助手',
+        skills: skillDescriptions.filter((s) => s.includes('导航') || s.includes('navigation')),
+    });
+    navAgent.registerTool(createNavigationTool());
+
+    // 🎵 媒体 Agent — 播放/暂停/搜索
+    const mediaAgent = new Agent({
+        ...sharedConfig,
+        name: '媒体助手',
+        skills: skillDescriptions.filter((s) => s.includes('媒体') || s.includes('media')),
+    });
+    mediaAgent.registerTool(createMediaTool());
+
+    // 💬 通用 Agent — 闲聊/日程/兜底（拥有所有工具）
+    const generalAgent = new Agent({
+        ...sharedConfig,
+        name: 'CarClaw',
+        skills: skillDescriptions,
+    });
+    generalAgent.registerTools([
         createVehicleControlTool(vehicleSimulator),
         createNavigationTool(),
         createMediaTool(),
         createScheduleTool(),
     ]);
 
-    // 10. 创建 Text Channel（带 TTS）
-    const textChannel = new TextChannel(tts);
+    // ── 6. 创建 AgentRouter ──
+    const router = new AgentRouter();
+    router.register('vehicle', vehicleAgent);
+    router.register('navigation', navAgent);
+    router.register('media', mediaAgent);
+    router.register('schedule', generalAgent);
+    router.register('general', generalAgent);
 
-    // 11. 创建 Gateway（注入车辆状态到多轮对话）
+    console.log('');
+
+    // ── 7. 启动 Gateway ──
+    const textChannel = new TextChannel(tts);
     const gateway = new Gateway({
-        agent,
+        router,
         channels: [textChannel],
         vehicleApi: vehicleSimulator,
     });
