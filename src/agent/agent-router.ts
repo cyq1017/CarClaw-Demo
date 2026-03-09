@@ -49,10 +49,18 @@ export class AgentRouter {
     classify(input: string): RouteResult {
         const text = input.toLowerCase();
 
+        // 多意图检测：包含多个领域关键词 → 交给通用 Agent
+        const domains = this.detectDomains(text);
+        if (domains.length > 1) {
+            return this.result('general', 0.7);
+        }
+
         // 车控意图
         if (this.matchesAny(text, [
-            '空调', '温度', '车窗', '座椅', '加热', '灯光', '车门',
-            '雨刷', '后备箱', '天窗', '暖风', '冷风', '开灯', '关灯',
+            '空调', '温度', '车窗', '窗户', '座椅', '加热', '灯光', '车门',
+            '雨刷', '后备箱', '天窗', '暖风', '冷风', '开灯', '关灯', '大灯', '灯',
+            '动力', '引擎', '发动机', '电量', '车速', '模式', '运动模式',
+            '通风', '除雾', '冷了', '热了',
         ])) {
             return this.result('vehicle', 0.9);
         }
@@ -60,7 +68,8 @@ export class AgentRouter {
         // 导航意图
         if (this.matchesAny(text, [
             '导航', '去', '路线', '到达', '停车场', '加油站', '充电',
-            '附近', '多远', '多久', '怎么走', '在哪',
+            '附近', '多远', '多久', '怎么走', '在哪', '找个', '找一个',
+            '厕所', '洗手间', '餐厅', '医院', '超市',
         ])) {
             return this.result('navigation', 0.85);
         }
@@ -68,7 +77,7 @@ export class AgentRouter {
         // 媒体意图
         if (this.matchesAny(text, [
             '播放', '音乐', '歌', '暂停', '下一首', '上一首', '声音',
-            '音量', '电台', '播客', '有声书',
+            '音量', '电台', '播客', '有声书', '新闻', '想听',
         ])) {
             return this.result('media', 0.85);
         }
@@ -82,6 +91,18 @@ export class AgentRouter {
 
         // 兜底
         return this.result('general', 0.5);
+    }
+
+    /**
+     * 检测文本涉及的多个领域（用于多意图检测）
+     */
+    private detectDomains(text: string): AgentDomain[] {
+        const found: AgentDomain[] = [];
+        if (this.matchesAny(text, ['空调', '温度', '车窗', '座椅', '灯', '车门', '天窗'])) found.push('vehicle');
+        if (this.matchesAny(text, ['导航', '去', '路线', '附近'])) found.push('navigation');
+        if (this.matchesAny(text, ['播放', '音乐', '歌'])) found.push('media');
+        if (this.matchesAny(text, ['提醒', '日程', '闹钟'])) found.push('schedule');
+        return found;
     }
 
     /**
@@ -100,7 +121,6 @@ export class AgentRouter {
 
     private result(domain: AgentDomain, confidence: number): RouteResult {
         const agent = this.agents.get(domain) || this.agents.get(this.defaultDomain);
-        if (!agent) throw new Error(`No agent registered for domain: ${domain}`);
-        return { domain, agent, confidence };
+        return { domain, agent: agent as Agent, confidence };
     }
 }

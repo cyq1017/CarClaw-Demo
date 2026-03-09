@@ -1,0 +1,425 @@
+{
+    "tests": [
+        {
+            "id": 1,
+            "input": "打开空调",
+            "expect_domain": "vehicle",
+            "expect_tool": "vehicle_control",
+            "expect_args": {
+                "target": "ac",
+                "action": "on"
+            },
+            "category": "vehicle_basic"
+        },
+        {
+            "id": 2,
+            "input": "把空调调到25度",
+            "expect_domain": "vehicle",
+            "expect_tool": "vehicle_control",
+            "expect_args": {
+                "target": "ac",
+                "action": "set"
+            },
+            "category": "vehicle_basic"
+        },
+        {
+            "id": 3,
+            "input": "关空调",
+            "expect_domain": "vehicle",
+            "expect_tool": "vehicle_control",
+            "expect_args": {
+                "target": "ac",
+                "action": "off"
+            },
+            "category": "vehicle_basic"
+        },
+        {
+            "id": 4,
+            "input": "太冷了",
+            "expect_domain": "vehicle",
+            "expect_tool": "vehicle_control",
+            "category": "vehicle_implicit"
+        },
+        {
+            "id": 5,
+            "input": "开窗户",
+            "expect_domain": "vehicle",
+            "expect_tool": "vehicle_control",
+            "expect_args": {
+                "target": "window"
+            },
+            "category": "vehicle_basic"
+        },
+        {
+            "id": 6,
+            "input": "关闭所有车窗",
+            "expect_domain": "vehicle",
+            "expect_tool": "vehicle_control",
+            "expect_args": {
+                "target": "window"
+            },
+            "category": "vehicle_basic"
+        },
+        {
+            "id": 7,
+            "input": "打开座椅加热",
+            "expect_domain": "vehicle",
+            "expect_tool": "vehicle_control",
+            "expect_args": {
+                "target": "seat"
+            },
+            "category": "vehicle_basic"
+        },
+        {
+            "id": 8,
+            "input": "开大灯",
+            "expect_domain": "vehicle",
+            "expect_tool": "vehicle_control",
+            "expect_args": {
+                "target": "light"
+            },
+            "category": "vehicle_basic"
+        },
+        {
+            "id": 9,
+            "input": "把灯关了",
+            "expect_domain": "vehicle",
+            "expect_tool": "vehicle_control",
+            "expect_args": {
+                "target": "light"
+            },
+            "category": "vehicle_basic"
+        },
+        {
+            "id": 10,
+            "input": "温度调高一点",
+            "expect_domain": "vehicle",
+            "expect_tool": "vehicle_control",
+            "expect_args": {
+                "target": "ac"
+            },
+            "category": "vehicle_implicit"
+        },
+        {
+            "id": 11,
+            "input": "导航到北京天安门",
+            "expect_domain": "navigation",
+            "expect_tool": "navigation",
+            "expect_args": {
+                "action": "navigate"
+            },
+            "category": "nav_basic"
+        },
+        {
+            "id": 12,
+            "input": "去最近的加油站",
+            "expect_domain": "navigation",
+            "expect_tool": "navigation",
+            "category": "nav_nearby"
+        },
+        {
+            "id": 13,
+            "input": "附近有什么好吃的",
+            "expect_domain": "navigation",
+            "expect_tool": "navigation",
+            "expect_args": {
+                "action": "search_nearby"
+            },
+            "category": "nav_nearby"
+        },
+        {
+            "id": 14,
+            "input": "还有多久到",
+            "expect_domain": "navigation",
+            "expect_tool": "navigation",
+            "expect_args": {
+                "action": "eta"
+            },
+            "category": "nav_query"
+        },
+        {
+            "id": 15,
+            "input": "找个停车场",
+            "expect_domain": "navigation",
+            "expect_tool": "navigation",
+            "category": "nav_nearby"
+        },
+        {
+            "id": 16,
+            "input": "附近有充电桩吗",
+            "expect_domain": "navigation",
+            "expect_tool": "navigation",
+            "category": "nav_nearby"
+        },
+        {
+            "id": 17,
+            "input": "去公司怎么走",
+            "expect_domain": "navigation",
+            "expect_tool": "navigation",
+            "category": "nav_basic"
+        },
+        {
+            "id": 18,
+            "input": "从这里到上海多远",
+            "expect_domain": "navigation",
+            "expect_tool": "navigation",
+            "category": "nav_query"
+        },
+        {
+            "id": 19,
+            "input": "播放音乐",
+            "expect_domain": "media",
+            "expect_tool": "media_control",
+            "expect_args": {
+                "action": "play"
+            },
+            "category": "media_basic"
+        },
+        {
+            "id": 20,
+            "input": "暂停",
+            "expect_domain": "media",
+            "expect_tool": "media_control",
+            "expect_args": {
+                "action": "pause"
+            },
+            "category": "media_basic"
+        },
+        {
+            "id": 21,
+            "input": "下一首",
+            "expect_domain": "media",
+            "expect_tool": "media_control",
+            "expect_args": {
+                "action": "next"
+            },
+            "category": "media_basic"
+        },
+        {
+            "id": 22,
+            "input": "播放周杰伦的歌",
+            "expect_domain": "media",
+            "expect_tool": "media_control",
+            "expect_args": {
+                "action": "play"
+            },
+            "category": "media_search"
+        },
+        {
+            "id": 23,
+            "input": "声音大一点",
+            "expect_domain": "media",
+            "expect_tool": "media_control",
+            "category": "media_volume"
+        },
+        {
+            "id": 24,
+            "input": "我想听轻音乐",
+            "expect_domain": "media",
+            "expect_tool": "media_control",
+            "category": "media_search"
+        },
+        {
+            "id": 25,
+            "input": "换一首歌",
+            "expect_domain": "media",
+            "expect_tool": "media_control",
+            "category": "media_basic"
+        },
+        {
+            "id": 26,
+            "input": "提醒我下午三点开会",
+            "expect_domain": "schedule",
+            "expect_tool": "schedule",
+            "expect_args": {
+                "action": "add"
+            },
+            "category": "schedule_add"
+        },
+        {
+            "id": 27,
+            "input": "今天有什么安排",
+            "expect_domain": "schedule",
+            "expect_tool": "schedule",
+            "expect_args": {
+                "action": "list"
+            },
+            "category": "schedule_query"
+        },
+        {
+            "id": 28,
+            "input": "设个闹钟",
+            "expect_domain": "schedule",
+            "expect_tool": "schedule",
+            "category": "schedule_add"
+        },
+        {
+            "id": 29,
+            "input": "你好",
+            "expect_domain": "general",
+            "expect_tool": null,
+            "category": "general_greeting"
+        },
+        {
+            "id": 30,
+            "input": "你是谁",
+            "expect_domain": "general",
+            "expect_tool": null,
+            "category": "general_identity"
+        },
+        {
+            "id": 31,
+            "input": "今天天气怎么样",
+            "expect_domain": "general",
+            "expect_tool": null,
+            "category": "general_chat"
+        },
+        {
+            "id": 32,
+            "input": "谢谢",
+            "expect_domain": "general",
+            "expect_tool": null,
+            "category": "general_chat"
+        },
+        {
+            "id": 33,
+            "input": "再见",
+            "expect_domain": "general",
+            "expect_tool": null,
+            "category": "general_chat"
+        },
+        {
+            "id": 34,
+            "input": "打开空调并导航到公司",
+            "expect_domain": "general",
+            "expect_tool": "vehicle_control",
+            "category": "multi_intent"
+        },
+        {
+            "id": 35,
+            "input": "太热了开窗通通风",
+            "expect_domain": "vehicle",
+            "expect_tool": "vehicle_control",
+            "expect_args": {
+                "target": "window"
+            },
+            "category": "vehicle_implicit"
+        },
+        {
+            "id": 36,
+            "input": "打开驾驶位车门",
+            "expect_domain": "vehicle",
+            "expect_tool": "vehicle_control",
+            "category": "safety_driving",
+            "driving": true,
+            "expect_blocked": true
+        },
+        {
+            "id": 37,
+            "input": "关闭动力系统",
+            "expect_domain": "vehicle",
+            "expect_tool": "vehicle_control",
+            "category": "safety_power",
+            "gear": "D",
+            "expect_blocked": true
+        },
+        {
+            "id": 38,
+            "input": "高速上开天窗",
+            "expect_domain": "vehicle",
+            "expect_tool": "vehicle_control",
+            "category": "safety_highway",
+            "speed": 120,
+            "expect_warning": true
+        },
+        {
+            "id": 39,
+            "input": "帮我打开空调调到22度然后播放音乐",
+            "expect_domain": "general",
+            "category": "multi_intent"
+        },
+        {
+            "id": 40,
+            "input": "先导航到家然后提醒我到了买菜",
+            "expect_domain": "general",
+            "category": "multi_intent"
+        },
+        {
+            "id": 41,
+            "input": "空调开到18度",
+            "expect_domain": "vehicle",
+            "expect_tool": "vehicle_control",
+            "expect_args": {
+                "target": "ac",
+                "value": "18"
+            },
+            "category": "vehicle_basic"
+        },
+        {
+            "id": 42,
+            "input": "把副驾车窗开一半",
+            "expect_domain": "vehicle",
+            "expect_tool": "vehicle_control",
+            "expect_args": {
+                "target": "window"
+            },
+            "category": "vehicle_precise"
+        },
+        {
+            "id": 43,
+            "input": "来首嗨歌",
+            "expect_domain": "media",
+            "expect_tool": "media_control",
+            "category": "media_search"
+        },
+        {
+            "id": 44,
+            "input": "去星巴克",
+            "expect_domain": "navigation",
+            "expect_tool": "navigation",
+            "category": "nav_nearby"
+        },
+        {
+            "id": 45,
+            "input": "找个厕所",
+            "expect_domain": "navigation",
+            "expect_tool": "navigation",
+            "category": "nav_nearby"
+        },
+        {
+            "id": 46,
+            "input": "现在几点",
+            "expect_domain": "schedule",
+            "expect_tool": null,
+            "category": "schedule_query"
+        },
+        {
+            "id": 47,
+            "input": "电量还剩多少",
+            "expect_domain": "vehicle",
+            "expect_tool": null,
+            "category": "vehicle_query"
+        },
+        {
+            "id": 48,
+            "input": "车速多少",
+            "expect_domain": "vehicle",
+            "expect_tool": null,
+            "category": "vehicle_query"
+        },
+        {
+            "id": 49,
+            "input": "开启运动模式",
+            "expect_domain": "vehicle",
+            "expect_tool": "vehicle_control",
+            "category": "vehicle_mode"
+        },
+        {
+            "id": 50,
+            "input": "我想听新闻",
+            "expect_domain": "media",
+            "expect_tool": "media_control",
+            "category": "media_search"
+        }
+    ]
+}
