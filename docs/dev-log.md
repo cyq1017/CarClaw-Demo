@@ -91,30 +91,63 @@
 
 ---
 
-## 🔑 当前状态（截至 2026-03-09 01:52）
+## 📅 2026-03-09 — 多 Agent + 评测 + 公开
+
+### 节点 11：仓库公开 + Skill Loader（22:26）
+- `gh repo edit --visibility public`
+- SkillLoader 接入 Agent：启动时加载 3 个 SKILL.md (car/media/nav) → 注入 System Prompt
+- v0.1.0 Tag 发布
+
+### 节点 12：多 Agent 架构（22:31）
+- 用户决策：做多 Agent 路由
+- 新建 `AgentRouter`：关键词意图分类 → 路由到专业 Agent
+- 4 个专业 Agent：
+  - 🚗 车控助手 (vehicle_control)
+  - 🗺️ 导航助手 (navigation)
+  - 🎵 媒体助手 (media_control)
+  - 💬 CarClaw 通用 (全部工具)
+- Gateway 升级：支持单/多 Agent 双模式
+- **验证**："打开空调" → vehicle (90%) → 车控助手 → tool call → 成功
+
+### 节点 13：评测系统（22:46）
+- 创建 `test-data/intents.json`：50 条测试用例，20 个分类
+- 创建 `scripts/eval-router.ts`：自动化路由准确率评测
+- **第一轮评测**：72% (14 failures)
+- **优化后**：
+  - 扩展关键词 (窗户/大灯/动力/电量/车速/模式/厕所/新闻/想听)
+  - 新增多意图检测 (vehicle+nav → general)
+- **最终评测**：**100% (50/50)** 🎯
+
+### 节点 14：System Prompt 调优 + v0.2.0（23:53）
+- System Prompt 按 DriveMode 切换回复风格：
+  - PARKED → 可闲聊 | DRIVING → 15字内 | HIGHWAY → 10字内
+- `package.json` → v0.2.0 + `npm run eval`
+
+---
+
+## 🔑 当前状态（截至 2026-03-09 23:53）
 
 ### Git 提交历史
-| # | Hash | 内容 |
-|---|------|------|
-| 1 | `12fa50b` | 代码骨架 36 files |
-| 2 | `56f7943` | SafetyGuard + DriveModeController + README |
-| 3 | `7f3329e` | 安全管线接入 Agent 执行流 |
-| 4 | `ee19866` | MockModelProvider 修复 |
-| 5 | `e6fdb97` | API Key 安全防护 |
-| 6 | `89683e6` | pre-commit hook |
-| 7 | `9caa493` | GPT-4o 端到端跑通 |
-| 8 | `a6b6a6c` | macOS TTS + 多轮车辆状态 |
-| 9 | `f94d103` | 评测方案 + 路线图更新 |
+| # | 内容 |
+|---|------|
+| 1-6 | 代码骨架 + SafetyGuard + 安全防护 |
+| 7 | GPT-4o 端到端跑通 |
+| 8 | macOS TTS + 多轮状态 |
+| 9-10 | 评测方案 + 开发日志 |
+| 11 | Skill Loader + 仓库公开 + v0.1.0 |
+| 12 | Multi-Agent 架构 |
+| 13 | 评测系统 + 路由优化 → 100% |
+| 14 | System Prompt DriveMode 调优 + v0.2.0 |
 
 ### 项目配置
-- **仓库**：`github.com/cyq1017/CarClaw-Demo` (private)
-- **LLM**：OpenAI GPT-4o（用户已配置 API Key 在本地 `carclaw.json`）
+- **仓库**：`github.com/cyq1017/CarClaw-Demo` (**public**)
+- **版本**：v0.2.0
+- **LLM**：OpenAI GPT-4o
 - **TTS**：macOS native (Ting-Ting)
-- **安全**：`.gitignore` + pre-commit hook 三层防护
+- **路由准确率**：100% (50/50)
 
-### 下一步（W4）
-- [ ] P0: Skill Loader 接入（读取 SKILL.md 注入 Agent prompt）
-- [ ] P1: 写 50 条核心测试用例 + 自动化评测
-- [ ] P2: 录交互式 Demo (GIF/视频)
-- [ ] P3: 接入 Whisper.cpp 做本地 STT
-- [ ] v0.1 Tag 发布
+### 下一步
+- [ ] 录交互式 Demo (GIF/视频)
+- [ ] 接入 Whisper.cpp 做本地 STT
+- [ ] 自动化评测接入 Mobiwusi 5000 QA
+
