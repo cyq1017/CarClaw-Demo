@@ -19,6 +19,8 @@ export interface AgentConfig {
     systemPromptPath?: string;
     maxToolCalls: number;
     temperature: number;
+    /** Skill 描述（注入 System Prompt） */
+    skills?: string[];
     /** CarClaw 独有：驾驶安全拦截器 */
     safetyGuard?: SafetyGuard;
     /** CarClaw 独有：驾驶模式控制器 */
@@ -84,7 +86,7 @@ export class Agent {
         // 组装系统提示（含 DriveMode 注入）
         const systemPrompt = this.promptBuilder.build({
             vehicleContext: session.vehicleContext,
-            skills: [],
+            skills: this.config.skills || [],
             driveModePrompt: this.config.driveModeController?.getModePrompt(),
         });
 

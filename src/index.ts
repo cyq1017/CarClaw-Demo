@@ -22,6 +22,7 @@ import { createVehicleControlTool } from './tools/vehicle/vehicle-control.js';
 import { createNavigationTool } from './tools/navigation/navigation.js';
 import { createMediaTool } from './tools/media/media.js';
 import { createScheduleTool } from './tools/schedule/schedule.js';
+import { SkillLoader } from './skills/skill-loader.js';
 
 async function main() {
     console.log('');
@@ -69,19 +70,28 @@ async function main() {
         console.log(`🚦 DriveMode changed: ${oldMode} → ${newMode}`);
     });
 
+    // 7. 加载 Skills
+    const skillLoader = new SkillLoader(
+        new URL('./skills', import.meta.url).pathname
+    );
+    const skills = await skillLoader.loadAll();
+    const skillDescriptions = skillLoader.getSkillDescriptions();
+    console.log(`📦 Skills loaded: ${skills.length} 个`);
+
     console.log('');
 
-    // 7. 创建 Agent
+    // 8. 创建 Agent（注入 Skills + Safety）
     const agent = new Agent({
         name: config.agent.name,
         modelProvider,
         maxToolCalls: config.agent.maxToolCalls,
         temperature: config.agent.temperature,
+        skills: skillDescriptions,
         safetyGuard,
         driveModeController,
     });
 
-    // 8. 注册车机工具
+    // 9. 注册车机工具
     agent.registerTools([
         createVehicleControlTool(vehicleSimulator),
         createNavigationTool(),
@@ -89,10 +99,10 @@ async function main() {
         createScheduleTool(),
     ]);
 
-    // 9. 创建 Text Channel（带 TTS）
+    // 10. 创建 Text Channel（带 TTS）
     const textChannel = new TextChannel(tts);
 
-    // 10. 创建 Gateway（注入车辆状态到多轮对话）
+    // 11. 创建 Gateway（注入车辆状态到多轮对话）
     const gateway = new Gateway({
         agent,
         channels: [textChannel],
