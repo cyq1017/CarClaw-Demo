@@ -134,4 +134,12 @@ export class VehicleSimulator implements VehicleAPI {
         ];
         return lines.join('\n');
     }
+
+    /**
+     * 设置速度（Web Demo 用于模拟驾驶模式切换）
+     */
+    setSpeed(speed: number): void {
+        this.state.speed = speed;
+        this.state.gear = speed === 0 ? 'P' : 'D';
+    }
 }
