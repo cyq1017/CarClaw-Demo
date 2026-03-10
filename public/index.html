@@ -502,6 +502,64 @@
             color: var(--text-dim);
         }
 
+        /* mic button */
+        .mic-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 1.5px solid var(--border);
+            background: var(--surface);
+            color: var(--text-dim);
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .mic-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: var(--accent-bg);
+        }
+
+        .mic-btn.recording {
+            background: var(--red);
+            border-color: var(--red);
+            color: white;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+            }
+
+            70% {
+                box-shadow: 0 0 0 12px rgba(239, 68, 68, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+            }
+        }
+
+        .mic-status {
+            font-size: 11px;
+            color: var(--red);
+            font-weight: 600;
+            padding: 0 28px;
+            height: 0;
+            overflow: hidden;
+            transition: height 0.2s;
+        }
+
+        .mic-status.active {
+            height: 20px;
+        }
+
         /* scrollbar */
         .messages::-webkit-scrollbar {
             width: 5px;
@@ -607,8 +665,10 @@
             <button class="quick-btn" onclick="sendQuick('打开驾驶位车门')">🚪 开车门</button>
         </div>
 
+        <div id="micStatus" class="mic-status">🎙️ 正在聆听...</div>
         <div class="chat-input">
-            <input id="input" type="text" placeholder="输入消息... 例如：打开空调 22 度"
+            <button class="mic-btn" id="micBtn" onclick="toggleVoice()" title="语音输入">🎙️</button>
+            <input id="input" type="text" placeholder="输入消息或点击 🎙️ 语音输入"
                 onkeydown="if(event.key==='Enter')sendMessage()" autofocus>
             <button class="send-btn" id="sendBtn" onclick="sendMessage()">发送</button>
         </div>
@@ -712,6 +772,64 @@
                 updateDriveMode(data.driveMode);
                 document.getElementById('speed').textContent = `${data.speed} km/h`;
             } catch (e) { }
+        }
+
+        // ── Web Speech API 语音输入 ──
+        let recognition = null;
+        let isRecording = false;
+
+        function initSpeechRecognition() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) return null;
+            const r = new SpeechRecognition();
+            r.lang = 'zh-CN';
+            r.interimResults = true;
+            r.continuous = false;
+
+            r.onresult = (event) => {
+                let transcript = '';
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    transcript += event.results[i][0].transcript;
+                }
+                inputEl.value = transcript;
+                if (event.results[event.results.length - 1].isFinal) {
+                    stopRecording();
+                    sendMessage();
+                }
+            };
+
+            r.onerror = (event) => {
+                console.warn('Speech error:', event.error);
+                stopRecording();
+            };
+
+            r.onend = () => { stopRecording(); };
+            return r;
+        }
+
+        function toggleVoice() {
+            if (isRecording) {
+                recognition?.stop();
+                stopRecording();
+            } else {
+                if (!recognition) recognition = initSpeechRecognition();
+                if (!recognition) {
+                    addMessage('浏览器不支持语音输入，请使用 Chrome', 'assistant');
+                    return;
+                }
+                isRecording = true;
+                document.getElementById('micBtn').classList.add('recording');
+                document.getElementById('micStatus').classList.add('active');
+                inputEl.placeholder = '🎙️ 说话中...';
+                recognition.start();
+            }
+        }
+
+        function stopRecording() {
+            isRecording = false;
+            document.getElementById('micBtn').classList.remove('recording');
+            document.getElementById('micStatus').classList.remove('active');
+            inputEl.placeholder = '输入消息或点击 🎙️ 语音输入';
         }
 
         fetch(`${API}/api/status`).then(r => r.json()).then(data => {
