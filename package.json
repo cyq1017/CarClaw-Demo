@@ -11,6 +11,7 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "eval": "tsx scripts/eval-router.ts",
+    "eval:e2e": "tsx scripts/eval-e2e.ts",
     "web": "tsx src/server.ts"
   },
   "keywords": [
